@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "123704241643",
+    "firebase_url": "https://licznik-eed72.firebaseio.com",
+    "project_id": "licznik-eed72",
+    "storage_bucket": "licznik-eed72.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123704241643:android:fca9ba1f237a485c",
+        "android_client_info": {
+          "package_name": "pl.noiseapps.meterstatus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "123704241643-u3drl5186t7q975ba2bb28a08e40rpnn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "pl.noiseapps.meterstatus",
+            "certificate_hash": "446ea060c565140cd766039e99491d3b2c9efbc3"
+          }
+        },
+        {
+          "client_id": "123704241643-a2gvjjmbjl257k4popib95pu53h2nbd0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClqGGa40kN3-1rPH5GX8wTFozKk_7O9HM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "123704241643-a2gvjjmbjl257k4popib95pu53h2nbd0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
