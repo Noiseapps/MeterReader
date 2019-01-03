@@ -1,80 +1,78 @@
 package pl.noiseapps.meterstatus
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.os.Bundle
-import android.provider.MediaStore
-import android.support.design.widget.Snackbar
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v4.content.PermissionChecker
-import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.google.firebase.ml.vision.FirebaseVision
-import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-
-const val REQUEST_IMAGE_CAPTURE = 123
-const val REQUEST_PERMISSION = 321
+import org.apache.commons.io.FileUtils
+import pl.noiseapps.meterstatus.readings.adapters.ReadingsAdapter
+import pl.noiseapps.meterstatus.readings.model.MeterReading
+import java.io.File
+import java.io.FileReader
+import java.nio.charset.Charset
 
 class MainActivity : AppCompatActivity() {
+
+    lateinit var adapter: ReadingsAdapter
+    val file: File by lazy { File(filesDir, "readings.json") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { this.readText() }
-    }
+        fab.setOnClickListener { this.addNewEntry() }
 
-    private fun readText() {
-//        if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
-                takePictureIntent.resolveActivity(packageManager)?.also {
-                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
-                }
-            }
-//        } else {
-//            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQUEST_PERMISSION)
-//        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        when(requestCode) {
-            REQUEST_PERMISSION -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    readText()
-                }
-            }
+        if (!file.exists()) file.createNewFile()
+        val readings = try {
+            Gson().fromJson<List<MeterReading>>(
+                FileReader(file),
+                object : TypeToken<List<MeterReading>>() {}.type
+            ).toMutableList()
+        } catch (ex: Exception) {
+            Log.d("Activity", "Jebło", ex)
+            mutableListOf<MeterReading>()
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            val imageBitmap = data?.extras?.get("data") as? Bitmap
-            if (imageBitmap != null) {
-                FirebaseVisionImage.fromBitmap(imageBitmap).also {
-                    FirebaseVision
-                        .getInstance()
-                        .onDeviceTextRecognizer
-                        .processImage(it).addOnSuccessListener { text ->
-                            Snackbar.make(rootView, "Tekst rozpoznany", Snackbar.LENGTH_LONG).show()
-                            contentView.text = text.text
-                            // todo pokaż jakiś dialog i ewentualnie zapisz do pamięci
-                        }.addOnFailureListener { exception ->
-                            Snackbar.make(rootView, "Błąd rozpoznawania tekstu", Snackbar.LENGTH_LONG).show()
-                        }
-                }
-            } else {
-                Snackbar.make(rootView, "Błąd przechwytu zdjęcia", Snackbar.LENGTH_LONG).show()
-            }
+        if (readings.isEmpty()) {
+            readings.addAll(MeterReading.dummy())
         }
+        adapter = ReadingsAdapter(readings.asSequence().sortedBy { -it.timestamp }.toMutableList())
+        inputsList.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, true)
+        inputsList.adapter = adapter
     }
 
+    private fun addNewEntry() {
+        val editText = EditText(this)
+        editText.inputType = EditorInfo.TYPE_CLASS_NUMBER
+        editText.setHint(R.string.current_reading)
+        editText.setText("123123")
+
+        val builder = AlertDialog.Builder(this)
+            .setTitle(R.string.new_value)
+            .setMessage(R.string.new_value_msg)
+            .setView(editText)
+        builder.setPositiveButton(R.string.add) { dialog, which ->
+            adapter.addItem(MeterReading(editText.text.toString().toLong()))
+            inputsList.scrollToPosition(0)
+            FileUtils.write(file, Gson().toJson(adapter.items), Charset.defaultCharset())
+        }
+
+        builder.setNegativeButton(R.string.cancel) { dialog, which ->
+            dialog.dismiss()
+        }
+
+        builder.show()
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)

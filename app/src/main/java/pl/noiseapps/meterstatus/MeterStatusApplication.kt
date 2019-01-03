@@ -1,12 +1,12 @@
 package pl.noiseapps.meterstatus
 
 import android.app.Application
-import com.google.firebase.FirebaseApp
+import net.danlew.android.joda.JodaTimeAndroid
 
 open class MeterStatusApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        FirebaseApp.initializeApp(this)
+        JodaTimeAndroid.init(this)
     }
 }
