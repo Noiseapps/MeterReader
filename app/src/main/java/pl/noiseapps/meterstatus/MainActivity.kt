@@ -57,22 +57,16 @@ class MainActivity : AppCompatActivity() {
 
                 println(children)
                 adapter.setItems(children)
-//                setupChart(children)
-
-//                if (children.isEmpty()) {
-//                try {
-//                    Gson().fromJson<List<MeterReading>>(
-//                        FileReader(file),
-//                        object : TypeToken<List<MeterReading>>() {}.type
-//                    ).toMutableList().forEach {
-//                        ref.push().setValue(it)
-//                    }
-//                } catch (ex: Exception) {
-//                    Log.d("Activity", "Jebło", ex)
-//                    mutableListOf<MeterReading>()
-//                }
+                setupChart(children)
             }
         })
+
+//        Gson().fromJson<List<MeterReading>>(
+//            FileReader(file),
+//            object : TypeToken<List<MeterReading>>() {}.type
+//        ).toMutableList().forEach {
+//            ref.push().setValue(it)
+//        }
     }
 
     private fun setupList(readings: MutableList<MeterReading>) {
