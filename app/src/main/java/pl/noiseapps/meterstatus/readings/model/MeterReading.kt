@@ -4,11 +4,12 @@ import org.joda.time.format.DateTimeFormat
 import java.util.*
 
 data class MeterReading(
-    val value: Long,
+    val value: Long = -1,
     val timestamp: Long = System.currentTimeMillis()
 ) {
 
     constructor(value: Long, ts: String) : this(value, DateTimeFormat.forPattern("dd-MM-yyyy HH:mm").parseMillis(ts))
+
 
     companion object {
         fun dummy(): List<MeterReading> {

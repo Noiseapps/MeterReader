@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.*
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.android.synthetic.main.activity_main.*
@@ -26,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var adapter: ReadingsAdapter
     val file: File by lazy { File(filesDir, "readings.json") }
 
+    private lateinit var ref: DatabaseReference
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -33,38 +36,63 @@ class MainActivity : AppCompatActivity() {
 
         fab.setOnClickListener { this.addNewEntry() }
 
-        if (!file.exists()) file.createNewFile()
-        val readings = try {
-            Gson().fromJson<List<MeterReading>>(
-                FileReader(file),
-                object : TypeToken<List<MeterReading>>() {}.type
-            ).toMutableList()
-        } catch (ex: Exception) {
-            Log.d("Activity", "Jebło", ex)
-            mutableListOf<MeterReading>()
-        }
-        if (readings.isEmpty()) {
-            readings.addAll(MeterReading.dummy())
-        }
-        adapter = ReadingsAdapter(readings.asSequence().sortedBy { -it.timestamp }.toMutableList())
-        inputsList.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, true)
+        val database = FirebaseDatabase.getInstance()
+        ref = database.reference
+
+        inputsList.layoutManager = LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, true)
+        adapter = ReadingsAdapter(mutableListOf())
         inputsList.adapter = adapter
+        ref.addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+            }
+
+            override fun onDataChange(data: DataSnapshot) {
+                val children = data.children.toList().mapNotNull { it.getValue(MeterReading::class.java) }
+                println(children)
+                if (children.isEmpty()) {
+                    MeterReading.dummy().forEach {
+                        ref.push().setValue(it)
+                    }
+                } else {
+                    adapter.setItems(children)
+                }
+            }
+        })
+
+
+//        if (!file.exists()) file.createNewFile()
+//        val readings = try {
+//            Gson().fromJson<List<MeterReading>>(
+//                FileReader(file),
+//                object : TypeToken<List<MeterReading>>() {}.type
+//            ).toMutableList()
+//        } catch (ex: Exception) {
+//            Log.d("Activity", "Jebło", ex)
+//            mutableListOf<MeterReading>()
+//        }
+//        if (readings.isEmpty()) {
+//            readings.addAll(MeterReading.dummy())
+//        }
+//        adapter = ReadingsAdapter(readings.asSequence().sortedBy { -it.timestamp }.toMutableList())
+//        inputsList.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, true)
+//        inputsList.adapter = adapter
     }
 
     private fun addNewEntry() {
         val editText = EditText(this)
         editText.inputType = EditorInfo.TYPE_CLASS_NUMBER
         editText.setHint(R.string.current_reading)
-        editText.setText("123123")
 
         val builder = AlertDialog.Builder(this)
             .setTitle(R.string.new_value)
             .setMessage(R.string.new_value_msg)
             .setView(editText)
         builder.setPositiveButton(R.string.add) { dialog, which ->
-            adapter.addItem(MeterReading(editText.text.toString().toLong()))
-            inputsList.scrollToPosition(0)
-            FileUtils.write(file, Gson().toJson(adapter.items), Charset.defaultCharset())
+            val meterReading = MeterReading(editText.text.toString().toLong())
+            ref.push().setValue(meterReading)
+//            adapter.addItem(meterReading)
+//            inputsList.scrollToPosition(0)
+//            FileUtils.write(file, Gson().toJson(adapter.items), Charset.defaultCharset())
         }
 
         builder.setNegativeButton(R.string.cancel) { dialog, which ->
@@ -72,17 +100,5 @@ class MainActivity : AppCompatActivity() {
         }
 
         builder.show()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_settings -> true
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 }

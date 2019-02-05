@@ -9,7 +9,7 @@ import org.joda.time.format.DateTimeFormat
 import pl.noiseapps.meterstatus.R
 import pl.noiseapps.meterstatus.readings.model.MeterReading
 
-class ReadingsAdapter(val items: MutableList<MeterReading>) : RecyclerView.Adapter<ReadingsAdapter.ViewHolder>() {
+class ReadingsAdapter(private val items: MutableList<MeterReading>) : RecyclerView.Adapter<ReadingsAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, type: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_reading, parent, false)
@@ -21,6 +21,12 @@ class ReadingsAdapter(val items: MutableList<MeterReading>) : RecyclerView.Adapt
     fun addItem(meterReading: MeterReading) {
         items.add(0, meterReading)
         notifyItemInserted(0)
+    }
+
+    fun setItems(items: List<MeterReading>) {
+        this.items.clear()
+        this.items.addAll(items)
+        notifyDataSetChanged()
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
