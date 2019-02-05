@@ -47,42 +47,32 @@ class MainActivity : AppCompatActivity() {
         adapter = ReadingsAdapter(mutableListOf())
         inputsList.adapter = adapter
         ref.addValueEventListener(object : ValueEventListener {
-            override fun onCancelled(p0: DatabaseError) {
+            override fun onCancelled(error: DatabaseError) {
+//                Log.d("EVENT LISTENER", error.message)
             }
 
             override fun onDataChange(data: DataSnapshot) {
-                val children = data.children.toList().mapNotNull { it.getValue(MeterReading::class.java) }
+                val children = data.children.toList().mapNotNull { it.getValue(MeterReading::class.java) }.reversed()
+                Log.d("EVENT LISTENER", children.size.toString())
+
                 println(children)
-                if (children.isEmpty()) {
-                    MeterReading.dummy().forEach {
-                        ref.push().setValue(it)
-                    }
-                } else {
-                    adapter.setItems(children)
-                }
+                adapter.setItems(children)
+//                setupChart(children)
+
+//                if (children.isEmpty()) {
+//                try {
+//                    Gson().fromJson<List<MeterReading>>(
+//                        FileReader(file),
+//                        object : TypeToken<List<MeterReading>>() {}.type
+//                    ).toMutableList().forEach {
+//                        ref.push().setValue(it)
+//                    }
+//                } catch (ex: Exception) {
+//                    Log.d("Activity", "Jebło", ex)
+//                    mutableListOf<MeterReading>()
+//                }
             }
         })
-
-
-//        if (!file.exists()) file.createNewFile()
-//        val readings = try {
-//            Gson().fromJson<List<MeterReading>>(
-//                FileReader(file),
-//                object : TypeToken<List<MeterReading>>() {}.type
-//            ).toMutableList()
-//        } catch (ex: Exception) {
-//            Log.d("Activity", "Jebło", ex)
-//            mutableListOf<MeterReading>()
-//        }
-//        if (readings.isEmpty()) {
-//            readings.addAll(MeterReading.dummy())
-//        }
-//        adapter = ReadingsAdapter(readings.asSequence().sortedBy { -it.timestamp }.toMutableList())
-//        inputsList.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, true)
-//        inputsList.adapter = adapter
-        val readings = getReadings()
-        setupList(readings)
-        setupChart(readings)
     }
 
     private fun setupList(readings: MutableList<MeterReading>) {
@@ -92,8 +82,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupChart(readings: List<MeterReading>) {
-        val entryList = readings.reversed()
-            .map { Entry(it.timestamp.toFloat(), it.value.toFloat(), it) }
+        val entryList = readings.map { Entry(it.timestamp.toFloat(), it.value.toFloat(), it) }
         val dataSet = LineDataSet(entryList, "Odczyty")
         with(chart.xAxis) {
             axisMinimum = readings.minBy { it.timestamp }!!.timestamp.toFloat()
