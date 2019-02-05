@@ -2,6 +2,8 @@ package pl.noiseapps.meterstatus
 
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
@@ -20,13 +22,11 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import org.apache.commons.io.FileUtils
 import pl.noiseapps.meterstatus.readings.adapters.ReadingsAdapter
 import pl.noiseapps.meterstatus.readings.model.MeterReading
 import pl.noiseapps.meterstatus.readings.model.dateTimeFormat
 import java.io.File
 import java.io.FileReader
-import java.nio.charset.Charset
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,7 +40,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { this.addNewEntry() }
 
         val database = FirebaseDatabase.getInstance()
         ref = database.reference
@@ -152,5 +151,17 @@ class MainActivity : AppCompatActivity() {
         chart.data.notifyDataChanged()
         chart.notifyDataSetChanged()
         chart.invalidate()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_add_item) {
+            addNewEntry()
+        }
+        return false
     }
 }
