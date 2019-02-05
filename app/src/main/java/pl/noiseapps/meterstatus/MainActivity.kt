@@ -20,11 +20,13 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import org.apache.commons.io.FileUtils
 import pl.noiseapps.meterstatus.readings.adapters.ReadingsAdapter
 import pl.noiseapps.meterstatus.readings.model.MeterReading
 import pl.noiseapps.meterstatus.readings.model.dateTimeFormat
 import java.io.File
 import java.io.FileReader
+import java.nio.charset.Charset
 
 class MainActivity : AppCompatActivity() {
 
@@ -43,6 +45,14 @@ class MainActivity : AppCompatActivity() {
         val database = FirebaseDatabase.getInstance()
         ref = database.reference
 
+//        Gson().fromJson<List<MeterReading>>(
+//            FileReader(file),
+//            object : TypeToken<List<MeterReading>>() {}.type
+//        ).toMutableList().sortedBy { it.timestamp }.forEach {
+////            println(it)
+//            ref.push().setValue(it)
+//        }
+
         inputsList.layoutManager = LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, true)
         adapter = ReadingsAdapter(mutableListOf())
         inputsList.adapter = adapter
@@ -52,21 +62,14 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onDataChange(data: DataSnapshot) {
-                val children = data.children.toList().mapNotNull { it.getValue(MeterReading::class.java) }.reversed()
+                val children = data.children.toList().mapNotNull { it.getValue(MeterReading::class.java) }
                 Log.d("EVENT LISTENER", children.size.toString())
 
-                println(children)
-                adapter.setItems(children)
+                adapter.setItems(children.reversed())
+//                FileUtils.write(file, Gson().toJson(children.sortedBy { -it.timestamp }), Charset.defaultCharset())
                 setupChart(children)
             }
         })
-
-//        Gson().fromJson<List<MeterReading>>(
-//            FileReader(file),
-//            object : TypeToken<List<MeterReading>>() {}.type
-//        ).toMutableList().forEach {
-//            ref.push().setValue(it)
-//        }
     }
 
     private fun setupList(readings: MutableList<MeterReading>) {
@@ -130,9 +133,6 @@ class MainActivity : AppCompatActivity() {
         builder.setPositiveButton(R.string.add) { dialog, which ->
             val meterReading = MeterReading(editText.text.toString().toLong())
             ref.push().setValue(meterReading)
-//            adapter.addItem(meterReading)
-//            inputsList.scrollToPosition(0)
-//            FileUtils.write(file, Gson().toJson(adapter.items), Charset.defaultCharset())
         }
 
         builder.setNegativeButton(R.string.cancel) { dialog, which ->
