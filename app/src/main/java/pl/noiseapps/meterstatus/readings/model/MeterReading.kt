@@ -5,13 +5,14 @@ import org.joda.time.format.DateTimeFormat
 val dateTimeFormat = DateTimeFormat.forPattern("dd-MM-yyyy HH:mm")
 
 data class MeterReading(
-    val value: Long,
+    val value: Long = -1,
     val timestamp: Long = System.currentTimeMillis()
 ) {
 
     constructor(value: Long, ts: String) : this(value, dateTimeFormat.parseMillis(ts))
 
     fun getDateString() = dateTimeFormat.print(timestamp)
+
 
     companion object {
         fun dummy(): List<MeterReading> {
