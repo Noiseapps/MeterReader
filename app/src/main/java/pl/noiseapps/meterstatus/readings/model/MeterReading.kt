@@ -1,18 +1,20 @@
 package pl.noiseapps.meterstatus.readings.model
 
 import org.joda.time.format.DateTimeFormat
-import java.util.*
+
+val dateTimeFormat = DateTimeFormat.forPattern("dd-MM-yyyy HH:mm")
 
 data class MeterReading(
     val value: Long,
     val timestamp: Long = System.currentTimeMillis()
 ) {
 
-    constructor(value: Long, ts: String) : this(value, DateTimeFormat.forPattern("dd-MM-yyyy HH:mm").parseMillis(ts))
+    constructor(value: Long, ts: String) : this(value, dateTimeFormat.parseMillis(ts))
+
+    fun getDateString() = dateTimeFormat.print(timestamp)
 
     companion object {
         fun dummy(): List<MeterReading> {
-            val r = Random()
             return listOf(
                 MeterReading(55130, "04-12-2018 21:23"),
                 MeterReading(63828, "05-12-2018 21:20"),
